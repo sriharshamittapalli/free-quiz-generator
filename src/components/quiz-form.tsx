@@ -215,7 +215,7 @@ export function QuizForm() {
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4 w-full max-w-sm overflow-hidden">
       <h2 className="text-lg font-semibold mb-4">Quiz Settings</h2>
       
       <Form {...form}>
@@ -326,7 +326,7 @@ export function QuizForm() {
             placeholder="Paste the JSON response from Claude here..."
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
-            className="resize-none h-32 overflow-y-auto"
+            className="resize-none h-32 overflow-y-auto w-full max-w-full overflow-x-hidden"
           />
           {jsonError && (
             <p className="text-red-500 text-sm">{jsonError}</p>
