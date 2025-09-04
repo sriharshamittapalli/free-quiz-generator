@@ -92,7 +92,7 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {question.choices.map((choice, choiceIndex) => {
+              {Array.isArray(question.choices) ? question.choices.map((choice, choiceIndex) => {
                 const isSelected = selectedAnswers[questionIndex] === choiceIndex
                 const isCorrect = question.answer === choiceIndex
                 const isWrong = showAnswers && isSelected && !isCorrect
@@ -119,7 +119,11 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
                     {choice}
                   </button>
                 )
-              })}
+              }) : (
+                <div className="p-3 text-center text-gray-500 bg-yellow-50 border border-yellow-200 rounded-md">
+                  Invalid question format: choices must be an array
+                </div>
+              )}
             </div>
             
             {showAnswers && (

@@ -13,13 +13,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Combobox } from "@/components/ui/combobox"
 import { useQuiz } from "@/contexts/quiz-context"
@@ -140,7 +133,7 @@ export function QuizForm() {
   }, [watchedLanguage, form])
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    const prompt = `Give me ${values.questions} multiple choice questions about ${values.topic} in the ${values.language} programming language/framework. The questions should be at an ${values.difficulty} level. Return your answer only in the form of a JSON object. The JSON object should have a key named "questions" which is an array of all the questions. Each entry/question should include the choices, the answer, and a "explanation". The choices should be an array where each choice is a "question","choices":"multiple question is the question", "choices", the answer", and "explanation". The choices should have four "A", "B", "C", and "D". Also, note the answer is the indexed number of the correct choice.`
+    const prompt = `Give me ${values.questions} multiple choice questions about ${values.topic} in the ${values.language} programming language/framework. The questions should be at an ${values.difficulty} level. Return your answer only in the form of a JSON object. The JSON object should have a key named "questions" which is an array of all the questions. Each question should have: "question" (string), "choices" (array of 4 strings), "answer" (number index of correct choice 0-3), and "explanation" (string). Example format: {"questions": [{"question": "What is...", "choices": ["option1", "option2", "option3", "option4"], "answer": 1, "explanation": "Because..."}]}`
     
     navigator.clipboard.writeText(prompt).then(() => {
       setCopyFeedback("Prompt copied to clipboard! ✓")
@@ -155,9 +148,64 @@ export function QuizForm() {
     try {
       const parsedData = JSON.parse(jsonInput)
       if (parsedData.questions && Array.isArray(parsedData.questions)) {
-        setJsonError("")
-        setQuizData(parsedData)
-        setJsonInput("") // Clear the input after successful load
+        // Validate and normalize each question structure
+        const normalizedQuestions = parsedData.questions.map((q: unknown, index: number) => {
+          // Type guard to ensure q is an object with the expected properties
+          if (typeof q !== 'object' || q === null) {
+            setJsonError(`Question ${index + 1}: Invalid question format`)
+            return null
+          }
+          
+          const question = q as Record<string, unknown>
+          
+          if (!question.question || typeof question.question !== 'string') {
+            setJsonError(`Question ${index + 1}: Missing or invalid 'question' field`)
+            return null
+          }
+          
+          // Handle both array and object formats for choices
+          let choices: string[]
+          if (Array.isArray(question.choices)) {
+            choices = question.choices
+          } else if (question.choices && typeof question.choices === 'object') {
+            // Convert object format {A: "...", B: "...", C: "...", D: "..."} to array
+            const choicesObj = question.choices as Record<string, unknown>
+            choices = [choicesObj.A, choicesObj.B, choicesObj.C, choicesObj.D].filter((choice): choice is string => typeof choice === 'string')
+          } else {
+            setJsonError(`Question ${index + 1}: 'choices' must be an array or object with A,B,C,D keys`)
+            return null
+          }
+          
+          if (choices.length === 0) {
+            setJsonError(`Question ${index + 1}: No valid choices found`)
+            return null
+          }
+          
+          if (typeof question.answer !== 'number' || question.answer < 0 || question.answer >= choices.length) {
+            setJsonError(`Question ${index + 1}: Invalid 'answer' index`)
+            return null
+          }
+          
+          if (!question.explanation || typeof question.explanation !== 'string') {
+            setJsonError(`Question ${index + 1}: Missing or invalid 'explanation' field`)
+            return null
+          }
+          
+          return {
+            question: question.question,
+            choices,
+            answer: question.answer,
+            explanation: question.explanation
+          }
+        })
+        
+        const isValidStructure = normalizedQuestions.every((q: unknown) => q !== null)
+        
+        if (isValidStructure) {
+          setJsonError("")
+          setQuizData({ questions: normalizedQuestions })
+          setJsonInput("") // Clear the input after successful load
+        }
       } else {
         setJsonError("Invalid JSON format. Expected 'questions' array.")
       }
