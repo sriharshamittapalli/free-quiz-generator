@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarInset } from "@/components/ui/sidebar";
+import { QuizForm } from "@/components/quiz-form";
+import { QuizProvider } from "@/contexts/quiz-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +30,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <QuizProvider>
+          <SidebarProvider>
+            <Sidebar>
+              <SidebarHeader>
+                <QuizForm />
+              </SidebarHeader>
+            </Sidebar>
+            <SidebarInset>
+              {children}
+            </SidebarInset>
+          </SidebarProvider>
+        </QuizProvider>
       </body>
     </html>
   );
