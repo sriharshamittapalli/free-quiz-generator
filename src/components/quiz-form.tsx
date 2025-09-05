@@ -130,12 +130,12 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
   }
 
   return (
-    <div className="p-4 w-full max-w-sm overflow-hidden" style={{ maxWidth: '384px', width: '100%' }}>
-      <h2 className="text-lg font-semibold mb-4">Quiz Settings</h2>
+    <div className="w-full">
+      <h2 className="text-sm font-medium text-gray-600 mb-3 uppercase tracking-wide">Quiz Settings</h2>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">LANGUAGE</label>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Language</label>
           <Combobox
             options={FORM_OPTIONS.languages}
             value={formData.language}
@@ -149,8 +149,8 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
           )}
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">TOPIC</label>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Topic</label>
           <Combobox
             options={[...availableTopics]}
             value={formData.topic}
@@ -164,8 +164,8 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
           )}
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">DIFFICULTY</label>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Difficulty</label>
           <Combobox
             options={FORM_OPTIONS.difficulties}
             value={formData.difficulty}
@@ -179,8 +179,8 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
           )}
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"># OF QUESTIONS</label>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide"># of Questions</label>
           <Combobox
             options={FORM_OPTIONS.questionCounts}
             value={formData.questions}
@@ -194,8 +194,8 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
           )}
         </div>
 
-        <Button type="submit" className="w-full mt-6 bg-green-600 hover:bg-green-700">
-          GENERATE QUIZ
+        <Button type="submit" className="w-full mt-4 bg-green-600 hover:bg-green-700 text-sm">
+          Generate Quiz
         </Button>
         {copyFeedback && (
           <p className="text-center text-sm text-green-600 mt-2 font-medium">
@@ -204,24 +204,23 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
         )}
       </form>
 
-      <div className="mt-8 border-t pt-4">
-        <h3 className="text-md font-semibold mb-4">Paste Quiz JSON</h3>
-        <div className="space-y-4 max-w-full overflow-hidden" style={{ maxWidth: '320px' }}>
+      <div className="mt-6 pt-4 border-t border-gray-100">
+        <h3 className="text-xs font-medium text-gray-600 mb-3 uppercase tracking-wide">Paste Quiz JSON</h3>
+        <div className="space-y-3">
           <Textarea
             placeholder="Paste the JSON response from Claude here..."
             value={jsonInput}
             onChange={(e) => setJsonInput(e.target.value)}
-            className="resize-none h-32 overflow-y-auto overflow-x-hidden"
-            style={{ width: '100%', maxWidth: '320px', minWidth: '0' }}
+            className="resize-none h-24 w-full text-sm"
           />
           {jsonError && (
-            <p className="text-red-500 text-sm">{jsonError}</p>
+            <p className="text-red-500 text-xs">{jsonError}</p>
           )}
           <Button 
             onClick={handleJsonSubmit}
-            className="w-full"
+            className="w-full text-sm"
           >
-            LOAD QUIZ
+            Load Quiz
           </Button>
         </div>
       </div>

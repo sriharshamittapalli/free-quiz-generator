@@ -11,11 +11,11 @@ type QuizDisplayProps = {
 }
 
 const EmptyState = () => (
-  <div className="flex items-center justify-center h-full">
-    <div className="text-center">
-      <h2 className="text-2xl font-bold mb-4">Welcome to Quiz Generator</h2>
-      <p className="text-gray-600">
-        Use the sidebar to generate a quiz prompt, then paste the JSON response to see your quiz here.
+  <div className="flex items-center justify-center min-h-[500px]">
+    <div className="text-center max-w-lg">
+      <h2 className="text-3xl font-bold mb-4">Welcome to Quiz Generator</h2>
+      <p className="text-gray-600 text-lg">
+        Use the form panel to generate a quiz prompt, then paste the JSON response to see your quiz here.
       </p>
     </div>
   </div>
@@ -65,7 +65,7 @@ const ChoicesList = ({ choices, correctAnswer, selectedAnswer, onSelect, showAns
 
 export function QuizDisplay({ quizData }: QuizDisplayProps) {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
-  const [showAnswers, setShowAnswers] = useState(false)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
 
   if (!quizData?.questions) {
     return <EmptyState />
@@ -80,7 +80,7 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
 
   const handleRestartQuiz = () => {
     setSelectedAnswers({})
-    setShowAnswers(false)
+    setCurrentQuestionIndex(0)
   }
 
   const getScore = () => {
@@ -90,68 +90,84 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="p-8 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Quiz Questions</h1>
         <div className="flex gap-2">
           <Badge variant="outline">
-            {quizData.questions.length} Questions
+            Question {currentQuestionIndex + 1} of {quizData.questions.length}
           </Badge>
-          {showAnswers && (
-            <Badge variant={getScore() === quizData.questions.length ? "default" : "secondary"}>
-              Score: {getScore()}/{quizData.questions.length}
-            </Badge>
-          )}
+          <Badge variant={getScore() === quizData.questions.length ? "default" : "secondary"}>
+            Score: {getScore()}/{quizData.questions.length}
+          </Badge>
         </div>
       </div>
 
-      {quizData.questions.map((question, questionIndex) => (
-        <Card key={questionIndex} className="w-full">
-          <CardHeader>
-            <CardTitle className="flex justify-between items-start">
-              <span>Question {questionIndex + 1}</span>
-              {showAnswers && (
-                <Badge 
-                  variant={selectedAnswers[questionIndex] === question.answer ? "default" : "destructive"}
-                >
-                  {selectedAnswers[questionIndex] === question.answer ? "Correct" : "Wrong"}
-                </Badge>
+{(() => {
+        const currentQuestion = quizData.questions[currentQuestionIndex]
+        return (
+          <Card className="w-full">
+            <CardHeader>
+              <CardTitle className="flex justify-between items-start">
+                <span>Question {currentQuestionIndex + 1}</span>
+                {selectedAnswers[currentQuestionIndex] !== undefined && (
+                  <Badge 
+                    variant={selectedAnswers[currentQuestionIndex] === currentQuestion.answer ? "default" : "destructive"}
+                  >
+                    {selectedAnswers[currentQuestionIndex] === currentQuestion.answer ? "Correct" : "Wrong"}
+                  </Badge>
+                )}
+              </CardTitle>
+              <p className="text-lg">{currentQuestion.question}</p>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(currentQuestion.choices) ? (
+                <ChoicesList 
+                  choices={currentQuestion.choices}
+                  correctAnswer={currentQuestion.answer}
+                  selectedAnswer={selectedAnswers[currentQuestionIndex]}
+                  onSelect={(choiceIndex) => handleAnswerSelect(currentQuestionIndex, choiceIndex)}
+                  showAnswers={selectedAnswers[currentQuestionIndex] !== undefined}
+                />
+              ) : (
+                <div className="p-3 text-center text-gray-500 bg-yellow-50 border border-yellow-200 rounded-md">
+                  Invalid question format: choices must be an array
+                </div>
               )}
-            </CardTitle>
-            <p className="text-lg">{question.question}</p>
-          </CardHeader>
-          <CardContent>
-            {Array.isArray(question.choices) ? (
-              <ChoicesList 
-                choices={question.choices}
-                correctAnswer={question.answer}
-                selectedAnswer={selectedAnswers[questionIndex]}
-                onSelect={(choiceIndex) => handleAnswerSelect(questionIndex, choiceIndex)}
-                showAnswers={showAnswers}
-              />
-            ) : (
-              <div className="p-3 text-center text-gray-500 bg-yellow-50 border border-yellow-200 rounded-md">
-                Invalid question format: choices must be an array
-              </div>
-            )}
-            
-            {showAnswers && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                <h4 className="font-semibold text-sm mb-2">Explanation:</h4>
-                <p className="text-sm text-gray-700">{question.explanation}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
+              
+              {selectedAnswers[currentQuestionIndex] !== undefined && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-md max-h-40 overflow-y-auto">
+                  <h4 className="font-semibold text-sm mb-2">Explanation:</h4>
+                  <p className="text-sm text-gray-700 leading-relaxed">{currentQuestion.explanation}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )
+      })()}
 
-      <div className="flex justify-center gap-4">
+      {/* Navigation buttons */}
+      <div className="flex justify-center gap-4 mb-4">
         <Button
-          onClick={() => setShowAnswers(!showAnswers)}
+          onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+          disabled={currentQuestionIndex === 0}
+          variant="outline"
           className="px-8"
         >
-          {showAnswers ? "Hide Answers" : "Show Answers"}
+          Previous
         </Button>
+        <Button
+          onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+          disabled={currentQuestionIndex === quizData.questions.length - 1}
+          variant="outline"
+          className="px-8"
+        >
+          Next
+        </Button>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex justify-center gap-4">
         {Object.keys(selectedAnswers).length > 0 && (
           <Button
             onClick={handleRestartQuiz}
