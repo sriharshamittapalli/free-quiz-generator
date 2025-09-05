@@ -30,13 +30,15 @@ This is a **Quiz Generator Application** built with Next.js 15, featuring a side
 ### Application Architecture
 
 #### Layout Structure
-- **Root Layout** (`src/app/layout.tsx`) - Wraps the entire app with `QuizProvider` and `SidebarProvider`
+- **Root Layout** (`src/app/layout.tsx`) - Basic Next.js layout with font configuration
+- **Main Page** (`src/app/page.tsx`) - Renders the QuizApp component
+- **Quiz App** (`src/components/quiz-app.tsx`) - Main container with SidebarProvider, manages quiz state
 - **Sidebar Layout** - Contains the quiz configuration form, always visible on desktop
 - **Main Content Area** - Displays the quiz questions and interactive elements
 
 #### State Management
-- **QuizContext** (`src/contexts/quiz-context.tsx`) - Global state for quiz data using React Context
-- **Quiz Data Flow**: Form → Context → Display Component
+- **Local State Management** - Uses React useState in QuizApp component for quiz data
+- **Quiz Data Flow**: Form → Props → Display Component
 - **Type-safe interfaces** for quiz data structure with TypeScript
 
 #### Key Components
@@ -76,10 +78,10 @@ This is a **Quiz Generator Application** built with Next.js 15, featuring a side
 6. **Quiz Taking**: Users can select answers, view scores, and see explanations
 
 ### Key Files Structure
-- `src/app/page.tsx` - Main quiz display page using QuizContext
+- `src/app/page.tsx` - Entry point that renders QuizApp component
+- `src/components/quiz-app.tsx` - Main application container with state management and sidebar layout
 - `src/components/quiz-form.tsx` - Sidebar form with dynamic language-topic mapping and combobox components
 - `src/components/quiz-display.tsx` - Interactive quiz interface with restart functionality
-- `src/contexts/quiz-context.tsx` - Global quiz state management with TypeScript interfaces
 - `src/components/ui/combobox.tsx` - Custom component combining selection and text input
 - `src/components/ui/` - shadcn/ui components (sidebar, form, select, command, popover, etc.)
 
@@ -94,5 +96,5 @@ This is a **Quiz Generator Application** built with Next.js 15, featuring a side
 - **Combobox Pattern**: Use the custom Combobox for fields requiring both selection and custom input
 - **JSON Structure**: Quiz JSON must have "questions" array with question, choices, answer (index), explanation
 - **Form Validation**: Uses React Hook Form with Zod schemas for type-safe form handling
-- **State Management**: QuizContext provides global state, must be used within QuizProvider
+- **State Management**: Quiz data managed locally in QuizApp component using useState, passed down via props
 - **Styling System**: Uses Tailwind CSS v4 with inline theme configuration and tw-animate-css for animations

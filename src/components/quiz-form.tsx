@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Combobox } from "@/components/ui/combobox"
 import { LANGUAGE_TOPICS, FORM_OPTIONS, DEFAULT_FORM_VALUES } from "@/config/quiz-options"
-import { QuizData } from "@/types/quiz"
+import { QuizData, Question } from "@/types/quiz"
 
 type QuizFormProps = {
   onQuizDataChange: (data: QuizData | null) => void
@@ -87,40 +87,44 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
       }
       
       // Process and validate questions - handle both array and object choices formats
-      const processedQuestions = parsedData.questions.map((q: any, index: number) => {
-        if (!q.question || !q.choices || typeof q.answer !== 'number' || !q.explanation) {
+      const processedQuestions = parsedData.questions.map((q: unknown, index: number) => {
+        // Type guard for question object
+        const question = q as { question?: string, choices?: unknown, answer?: unknown, explanation?: string }
+        
+        if (!question.question || !question.choices || typeof question.answer !== 'number' || !question.explanation) {
           setJsonError(`Question ${index + 1}: Missing required fields (question, choices, answer, explanation)`)
           return null
         }
-
+        
         // Handle choices as either array or object (A, B, C, D format)
         let choicesArray: string[]
-        if (Array.isArray(q.choices)) {
-          choicesArray = q.choices
-        } else if (typeof q.choices === 'object') {
+        if (Array.isArray(question.choices)) {
+          choicesArray = question.choices
+        } else if (typeof question.choices === 'object' && question.choices !== null) {
           // Convert object format {A: "...", B: "...", C: "...", D: "..."} to array
-          choicesArray = [q.choices.A, q.choices.B, q.choices.C, q.choices.D].filter(choice => typeof choice === 'string')
+          const choicesObj = question.choices as Record<string, unknown>
+          choicesArray = [choicesObj.A, choicesObj.B, choicesObj.C, choicesObj.D].filter(choice => typeof choice === 'string') as string[]
         } else {
           setJsonError(`Question ${index + 1}: Choices must be an array or object with A,B,C,D keys`)
           return null
         }
 
         return {
-          question: q.question,
+          question: question.question as string,
           choices: choicesArray,
-          answer: q.answer,
-          explanation: q.explanation
+          answer: question.answer as number,
+          explanation: question.explanation as string
         }
       })
 
-      const isValid = processedQuestions.every((q: any) => q !== null)
+      const isValid = processedQuestions.every((q: Question | null) => q !== null)
       
       if (isValid) {
         setJsonError("")
         onQuizDataChange({ questions: processedQuestions })
         setJsonInput("")
       }
-    } catch (error) {
+    } catch {
       setJsonError("Invalid JSON format. Please check your input.")
     }
   }
