@@ -4,42 +4,71 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { QuizData } from "@/types/quiz"
 
-interface Question {
-  question: string
-  choices: string[]
-  answer: number
-  explanation: string
-}
-
-interface QuizData {
-  questions: Question[]
-}
-
-interface QuizDisplayProps {
+type QuizDisplayProps = {
   quizData: QuizData | null
 }
 
-export function QuizDisplay({ quizData }: QuizDisplayProps) {
-  const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: number}>({})
-  const [showAnswers, setShowAnswers] = useState(false)
+const EmptyState = () => (
+  <div className="flex items-center justify-center h-full">
+    <div className="text-center">
+      <h2 className="text-2xl font-bold mb-4">Welcome to Quiz Generator</h2>
+      <p className="text-gray-600">
+        Use the sidebar to generate a quiz prompt, then paste the JSON response to see your quiz here.
+      </p>
+    </div>
+  </div>
+)
 
-  const handleRestartQuiz = () => {
-    setSelectedAnswers({})
-    setShowAnswers(false)
+type ChoicesListProps = {
+  choices: string[]
+  correctAnswer: number
+  selectedAnswer: number | undefined
+  onSelect: (choiceIndex: number) => void
+  showAnswers: boolean
+}
+
+const ChoicesList = ({ choices, correctAnswer, selectedAnswer, onSelect, showAnswers }: ChoicesListProps) => {
+  const getChoiceStyles = (choiceIndex: number) => {
+    const isSelected = selectedAnswer === choiceIndex
+    const isCorrect = correctAnswer === choiceIndex
+    const isWrong = showAnswers && isSelected && !isCorrect
+    const shouldHighlight = showAnswers && isCorrect
+
+    if (isSelected && isWrong) return "bg-red-100 border-red-300 text-red-800"
+    if (isSelected) return "bg-blue-100 border-blue-300 text-blue-800"
+    if (shouldHighlight) return "bg-green-100 border-green-300 text-green-800"
+    return "bg-gray-50 border-gray-200 hover:bg-gray-100"
   }
 
-  if (!quizData || !quizData.questions) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Welcome to Quiz Generator</h2>
-          <p className="text-gray-600">
-            Use the sidebar to generate a quiz prompt, then paste the JSON response to see your quiz here.
-          </p>
-        </div>
-      </div>
-    )
+  return (
+    <div className="space-y-2">
+      {choices.map((choice, choiceIndex) => (
+        <button
+          key={choiceIndex}
+          onClick={() => onSelect(choiceIndex)}
+          className={`w-full p-3 text-left rounded-md border transition-colors ${
+            getChoiceStyles(choiceIndex)
+          } ${showAnswers ? "cursor-default" : "cursor-pointer"}`}
+          disabled={showAnswers}
+        >
+          <span className="font-medium mr-2">
+            {String.fromCharCode(65 + choiceIndex)}.
+          </span>
+          {choice}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export function QuizDisplay({ quizData }: QuizDisplayProps) {
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
+  const [showAnswers, setShowAnswers] = useState(false)
+
+  if (!quizData?.questions) {
+    return <EmptyState />
   }
 
   const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
@@ -49,14 +78,15 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
     }))
   }
 
+  const handleRestartQuiz = () => {
+    setSelectedAnswers({})
+    setShowAnswers(false)
+  }
+
   const getScore = () => {
-    let correct = 0
-    quizData.questions.forEach((q, index) => {
-      if (selectedAnswers[index] === q.answer) {
-        correct++
-      }
-    })
-    return correct
+    return quizData.questions.reduce((correct, question, index) => {
+      return selectedAnswers[index] === question.answer ? correct + 1 : correct
+    }, 0)
   }
 
   return (
@@ -91,40 +121,19 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
             <p className="text-lg">{question.question}</p>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {Array.isArray(question.choices) ? question.choices.map((choice, choiceIndex) => {
-                const isSelected = selectedAnswers[questionIndex] === choiceIndex
-                const isCorrect = question.answer === choiceIndex
-                const isWrong = showAnswers && isSelected && !isCorrect
-                const shouldHighlight = showAnswers && isCorrect
-
-                return (
-                  <button
-                    key={choiceIndex}
-                    onClick={() => handleAnswerSelect(questionIndex, choiceIndex)}
-                    className={`w-full p-3 text-left rounded-md border transition-colors cursor-pointer ${
-                      isSelected
-                        ? isWrong
-                          ? "bg-red-100 border-red-300 text-red-800"
-                          : "bg-blue-100 border-blue-300 text-blue-800"
-                        : shouldHighlight
-                        ? "bg-green-100 border-green-300 text-green-800"
-                        : "bg-gray-50 border-gray-200 hover:bg-gray-100"
-                    } ${showAnswers ? "cursor-default" : ""}`}
-                    disabled={showAnswers}
-                  >
-                    <span className="font-medium mr-2">
-                      {String.fromCharCode(65 + choiceIndex)}.
-                    </span>
-                    {choice}
-                  </button>
-                )
-              }) : (
-                <div className="p-3 text-center text-gray-500 bg-yellow-50 border border-yellow-200 rounded-md">
-                  Invalid question format: choices must be an array
-                </div>
-              )}
-            </div>
+            {Array.isArray(question.choices) ? (
+              <ChoicesList 
+                choices={question.choices}
+                correctAnswer={question.answer}
+                selectedAnswer={selectedAnswers[questionIndex]}
+                onSelect={(choiceIndex) => handleAnswerSelect(questionIndex, choiceIndex)}
+                showAnswers={showAnswers}
+              />
+            ) : (
+              <div className="p-3 text-center text-gray-500 bg-yellow-50 border border-yellow-200 rounded-md">
+                Invalid question format: choices must be an array
+              </div>
+            )}
             
             {showAnswers && (
               <div className="mt-4 p-4 bg-gray-50 rounded-md">
