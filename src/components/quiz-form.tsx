@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Combobox } from "@/components/ui/combobox"
 import { LANGUAGE_TOPICS, FORM_OPTIONS, DEFAULT_FORM_VALUES } from "@/config/quiz-options"
 import { QuizData, Question } from "@/types/quiz"
+import { normalizeQuizData } from "@/utils/quiz-normalizer"
 
 type QuizFormProps = {
   onQuizDataChange: (data: QuizData | null) => void
@@ -86,44 +87,10 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
         return
       }
       
-      // Process and validate questions - handle both array and object choices formats
-      const processedQuestions = parsedData.questions.map((q: unknown, index: number) => {
-        // Type guard for question object
-        const question = q as { question?: string, choices?: unknown, answer?: unknown, explanation?: string }
-        
-        if (!question.question || !question.choices || typeof question.answer !== 'number' || !question.explanation) {
-          setJsonError(`Question ${index + 1}: Missing required fields (question, choices, answer, explanation)`)
-          return null
-        }
-        
-        // Handle choices as either array or object (A, B, C, D format)
-        let choicesArray: string[]
-        if (Array.isArray(question.choices)) {
-          choicesArray = question.choices
-        } else if (typeof question.choices === 'object' && question.choices !== null) {
-          // Convert object format {A: "...", B: "...", C: "...", D: "..."} to array
-          const choicesObj = question.choices as Record<string, unknown>
-          choicesArray = [choicesObj.A, choicesObj.B, choicesObj.C, choicesObj.D].filter(choice => typeof choice === 'string') as string[]
-        } else {
-          setJsonError(`Question ${index + 1}: Choices must be an array or object with A,B,C,D keys`)
-          return null
-        }
-
-        return {
-          question: question.question as string,
-          choices: choicesArray,
-          answer: question.answer as number,
-          explanation: question.explanation as string
-        }
-      })
-
-      const isValid = processedQuestions.every((q: Question | null) => q !== null)
-      
-      if (isValid) {
-        setJsonError("")
-        onQuizDataChange({ questions: processedQuestions })
-        setJsonInput("")
-      }
+      const normalizedData = normalizeQuizData(parsedData)
+      setJsonError("")
+      onQuizDataChange(normalizedData)
+      setJsonInput("")
     } catch {
       setJsonError("Invalid JSON format. Please check your input.")
     }

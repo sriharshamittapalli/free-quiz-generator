@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkBreaks from "remark-breaks"
+import { formatTextForMarkdown } from "@/utils/text-formatter"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -56,7 +59,12 @@ const ChoicesList = ({ choices, correctAnswer, selectedAnswer, onSelect, showAns
           <span className="font-medium mr-2">
             {String.fromCharCode(65 + choiceIndex)}.
           </span>
-          {choice}
+          <ReactMarkdown 
+            remarkPlugins={[remarkBreaks]}
+            components={{
+              p: ({ children }) => <span>{children}</span>
+            }}
+          >{formatTextForMarkdown(choice)}</ReactMarkdown>
         </button>
       ))}
     </div>
@@ -118,7 +126,9 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
                   </Badge>
                 )}
               </CardTitle>
-              <p className="text-lg">{currentQuestion.question}</p>
+              <div className="text-lg prose prose-slate max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkBreaks]}>{formatTextForMarkdown(currentQuestion.question)}</ReactMarkdown>
+              </div>
             </CardHeader>
             <CardContent>
               {Array.isArray(currentQuestion.choices) ? (
@@ -138,7 +148,9 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
               {selectedAnswers[currentQuestionIndex] !== undefined && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-md max-h-40 overflow-y-auto">
                   <h4 className="font-semibold text-sm mb-2">Explanation:</h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">{currentQuestion.explanation}</p>
+                  <div className="text-sm text-gray-700 leading-relaxed prose prose-slate prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkBreaks]}>{formatTextForMarkdown(currentQuestion.explanation)}</ReactMarkdown>
+                  </div>
                 </div>
               )}
             </CardContent>
