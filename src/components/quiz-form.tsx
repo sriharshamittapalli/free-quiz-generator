@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Combobox } from "@/components/ui/combobox"
 import { LANGUAGE_TOPICS, FORM_OPTIONS, DEFAULT_FORM_VALUES } from "@/config/quiz-options"
-import { QuizData, Question } from "@/types/quiz"
+import { QuizData } from "@/types/quiz"
 import { normalizeQuizData } from "@/utils/quiz-normalizer"
 
 type QuizFormProps = {

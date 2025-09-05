@@ -21,20 +21,21 @@ This is a **Quiz Generator Application** built with Next.js 15, featuring a side
 
 ### Core Technologies
 - **Next.js 15** with App Router architecture
-- **React 19** for UI components with React Context for state management
+- **React 19** for UI components with local state management
 - **TypeScript** for type safety
 - **Tailwind CSS v4** for styling
 - **shadcn/ui** components built on Radix UI primitives
 - **React Hook Form** with Zod validation for form handling
+- **react-markdown** with remark-breaks for universal text formatting
 
 ### Application Architecture
 
 #### Layout Structure
 - **Root Layout** (`src/app/layout.tsx`) - Basic Next.js layout with font configuration
 - **Main Page** (`src/app/page.tsx`) - Renders the QuizApp component
-- **Quiz App** (`src/components/quiz-app.tsx`) - Main container with SidebarProvider, manages quiz state
-- **Sidebar Layout** - Contains the quiz configuration form, always visible on desktop
-- **Main Content Area** - Displays the quiz questions and interactive elements
+- **Quiz App** (`src/components/quiz-app.tsx`) - Main container with split-panel layout, manages quiz state
+- **Left Panel** - Contains the quiz configuration form (fixed width: 384px)
+- **Right Panel** - Displays the quiz questions and interactive elements (flexible width)
 
 #### State Management
 - **Local State Management** - Uses React useState in QuizApp component for quiz data
@@ -48,14 +49,17 @@ This is a **Quiz Generator Application** built with Next.js 15, featuring a side
 - Combobox components that allow both selection and custom input
 - AI prompt generation with clipboard copying and visual feedback
 - JSON input textarea for pasting AI-generated quiz data
+- Universal JSON format support via normalizer utility
 - Form validation using Zod schemas and React Hook Form
 
 **Quiz Display (`src/components/quiz-display.tsx`)**:
 - Interactive multiple-choice questions with A/B/C/D options
+- ReactMarkdown rendering with proper newline handling for code snippets
 - Answer selection, scoring, and results display
 - Show/hide answers with explanations functionality
 - Quiz restart functionality to reset all selections
 - Color-coded feedback (correct/incorrect answers)
+- Navigation between questions with Previous/Next buttons
 
 ### UI Component System
 - **shadcn/ui components** - All UI components must be added via `npx shadcn@latest add [component]`
@@ -63,11 +67,11 @@ This is a **Quiz Generator Application** built with Next.js 15, featuring a side
 - Uses class-variance-authority (cva) for component variants  
 - Components follow consistent patterns with forwardRef and slot support
 - Styling with Tailwind CSS v4 with inline theme configuration (`src/app/globals.css`)
-- **Optimized Component Set**: Only essential components are included (13 total):
-  - Core: button, form, label, input, textarea, select, card, badge
-  - Navigation: sidebar (simplified), combobox (custom), command, popover, separator
+- **Optimized Component Set**: Only essential components are included (7 total):
+  - Core: button, textarea, card, badge, combobox (custom)
+  - Interactive: command, popover
 - **Custom Combobox** (`src/components/ui/combobox.tsx`) - Allows both selection and typing custom values
-- **Simplified Sidebar** - Contains only the 4 components used by the app: `SidebarProvider`, `Sidebar`, `SidebarHeader`, `SidebarInset`
+- **Text Formatting** - ReactMarkdown with remark-breaks plugin for proper newline handling
 
 ### Data Flow & User Workflow
 1. **Configuration Phase**: User configures quiz settings in sidebar form
@@ -79,22 +83,32 @@ This is a **Quiz Generator Application** built with Next.js 15, featuring a side
 
 ### Key Files Structure
 - `src/app/page.tsx` - Entry point that renders QuizApp component
-- `src/components/quiz-app.tsx` - Main application container with state management and sidebar layout
-- `src/components/quiz-form.tsx` - Sidebar form with dynamic language-topic mapping and combobox components
-- `src/components/quiz-display.tsx` - Interactive quiz interface with restart functionality
+- `src/components/quiz-app.tsx` - Main application container with split-panel layout and state management
+- `src/components/quiz-form.tsx` - Left panel form with dynamic language-topic mapping and JSON processing
+- `src/components/quiz-display.tsx` - Right panel quiz interface with ReactMarkdown rendering
 - `src/components/ui/combobox.tsx` - Custom component combining selection and text input
-- `src/components/ui/` - shadcn/ui components (sidebar, form, select, command, popover, etc.)
+- `src/components/ui/` - shadcn/ui components (button, form, select, card, etc.)
+- `src/utils/quiz-normalizer.ts` - Utility for handling different AI-generated JSON formats
+- `src/utils/text-formatter.ts` - Utility for preprocessing text for proper markdown rendering
+- `src/config/quiz-options.ts` - Language topics and form configuration
+- `src/types/quiz.ts` - TypeScript interfaces for quiz data structure
 
 ### Import Aliases
 - `@/*` maps to `src/*` for clean imports
 
 ### Important Notes
 - **Component Source**: All new UI components must be added from shadcn/ui only
-- **Codebase Optimization**: Components have been cleaned up - only 13 essential shadcn/ui components remain
-- **Dependencies**: Uses minimal Radix UI dependencies (5 total): react-label, react-popover, react-select, react-separator, react-slot
+- **Codebase Optimization**: Components have been cleaned up - only 7 essential shadcn/ui components remain
+- **Dependencies**: Uses minimal Radix UI dependencies (3 total): react-popover, react-select, react-slot
 - **Language Topics**: Topics are dynamically generated based on official documentation research
 - **Combobox Pattern**: Use the custom Combobox for fields requiring both selection and custom input
-- **JSON Structure**: Quiz JSON must have "questions" array with question, choices, answer (index), explanation
+- **JSON Structure**: Supports flexible formats - `choices` can be array or object `{A: "...", B: "...", C: "...", D: "..."}`
+- **Text Formatting**: All text content rendered through ReactMarkdown with remark-breaks for proper newlines
 - **Form Validation**: Uses React Hook Form with Zod schemas for type-safe form handling
 - **State Management**: Quiz data managed locally in QuizApp component using useState, passed down via props
 - **Styling System**: Uses Tailwind CSS v4 with inline theme configuration and tw-animate-css for animations
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
