@@ -79,6 +79,11 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
     return <EmptyState />
   }
 
+  const currentQuestion = quizData.questions[currentQuestionIndex]
+  const currentSelectedAnswer = selectedAnswers[currentQuestionIndex]
+  const hasAnsweredCurrent = currentSelectedAnswer !== undefined
+  const isCurrentAnswerCorrect = currentSelectedAnswer === currentQuestion.answer
+
   const handleAnswerSelect = (questionIndex: number, answerIndex: number) => {
     setSelectedAnswers(prev => ({
       ...prev,
@@ -111,52 +116,49 @@ export function QuizDisplay({ quizData }: QuizDisplayProps) {
         </div>
       </div>
 
-{(() => {
-        const currentQuestion = quizData.questions[currentQuestionIndex]
-        return (
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle className="flex justify-between items-start">
-                <span>Question {currentQuestionIndex + 1}</span>
-                {selectedAnswers[currentQuestionIndex] !== undefined && (
-                  <Badge 
-                    variant={selectedAnswers[currentQuestionIndex] === currentQuestion.answer ? "default" : "destructive"}
-                  >
-                    {selectedAnswers[currentQuestionIndex] === currentQuestion.answer ? "Correct" : "Wrong"}
-                  </Badge>
-                )}
-              </CardTitle>
-              <div className="text-lg prose prose-slate max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkBreaks]}>{formatTextForMarkdown(currentQuestion.question)}</ReactMarkdown>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex justify-between items-start">
+            <span>Question {currentQuestionIndex + 1}</span>
+            {hasAnsweredCurrent && (
+              <Badge variant={isCurrentAnswerCorrect ? "default" : "destructive"}>
+                {isCurrentAnswerCorrect ? "Correct" : "Wrong"}
+              </Badge>
+            )}
+          </CardTitle>
+          <div className="text-lg prose prose-slate max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkBreaks]}>
+              {formatTextForMarkdown(currentQuestion.question)}
+            </ReactMarkdown>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {Array.isArray(currentQuestion.choices) ? (
+            <ChoicesList 
+              choices={currentQuestion.choices}
+              correctAnswer={currentQuestion.answer}
+              selectedAnswer={currentSelectedAnswer}
+              onSelect={(choiceIndex) => handleAnswerSelect(currentQuestionIndex, choiceIndex)}
+              showAnswers={hasAnsweredCurrent}
+            />
+          ) : (
+            <div className="p-3 text-center text-gray-500 bg-yellow-50 border border-yellow-200 rounded-md">
+              Invalid question format: choices must be an array
+            </div>
+          )}
+          
+          {hasAnsweredCurrent && (
+            <div className="mt-4 p-4 bg-gray-50 rounded-md max-h-40 overflow-y-auto">
+              <h4 className="font-semibold text-sm mb-2">Explanation:</h4>
+              <div className="text-sm text-gray-700 leading-relaxed prose prose-slate prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkBreaks]}>
+                  {formatTextForMarkdown(currentQuestion.explanation)}
+                </ReactMarkdown>
               </div>
-            </CardHeader>
-            <CardContent>
-              {Array.isArray(currentQuestion.choices) ? (
-                <ChoicesList 
-                  choices={currentQuestion.choices}
-                  correctAnswer={currentQuestion.answer}
-                  selectedAnswer={selectedAnswers[currentQuestionIndex]}
-                  onSelect={(choiceIndex) => handleAnswerSelect(currentQuestionIndex, choiceIndex)}
-                  showAnswers={selectedAnswers[currentQuestionIndex] !== undefined}
-                />
-              ) : (
-                <div className="p-3 text-center text-gray-500 bg-yellow-50 border border-yellow-200 rounded-md">
-                  Invalid question format: choices must be an array
-                </div>
-              )}
-              
-              {selectedAnswers[currentQuestionIndex] !== undefined && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-md max-h-40 overflow-y-auto">
-                  <h4 className="font-semibold text-sm mb-2">Explanation:</h4>
-                  <div className="text-sm text-gray-700 leading-relaxed prose prose-slate prose-sm max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkBreaks]}>{formatTextForMarkdown(currentQuestion.explanation)}</ReactMarkdown>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )
-      })()}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Navigation buttons */}
       <div className="flex justify-center gap-4 mb-4">

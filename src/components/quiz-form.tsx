@@ -1,10 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Combobox } from "@/components/ui/combobox"
-import { LANGUAGE_TOPICS, FORM_OPTIONS, DEFAULT_FORM_VALUES } from "@/config/quiz-options"
+import { Input } from "@/components/ui/input"
 import { QuizData } from "@/types/quiz"
 import { normalizeQuizData } from "@/utils/quiz-normalizer"
 
@@ -12,44 +11,47 @@ type QuizFormProps = {
   onQuizDataChange: (data: QuizData | null) => void
 }
 
+type FormData = {
+  language: string
+  topic: string
+  difficulty: string
+  questions: string
+}
+
 export function QuizForm({ onQuizDataChange }: QuizFormProps) {
+  const [formData, setFormData] = useState<FormData>({
+    language: "Python",
+    topic: "Variables & Data Types",
+    difficulty: "intermediate",
+    questions: "5",
+  })
+  
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
   const [jsonInput, setJsonInput] = useState("")
   const [jsonError, setJsonError] = useState("")
   const [copyFeedback, setCopyFeedback] = useState("")
-  const [availableTopics, setAvailableTopics] = useState<{value: string, label: string}[]>([...LANGUAGE_TOPICS.python])
-  const [formData, setFormData] = useState({
-    language: DEFAULT_FORM_VALUES.language,
-    topic: DEFAULT_FORM_VALUES.topic,
-    difficulty: DEFAULT_FORM_VALUES.difficulty,
-    questions: DEFAULT_FORM_VALUES.questions,
-  })
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    if (formData.language && LANGUAGE_TOPICS[formData.language as keyof typeof LANGUAGE_TOPICS]) {
-      const newTopics = LANGUAGE_TOPICS[formData.language as keyof typeof LANGUAGE_TOPICS]
-      setAvailableTopics([...newTopics])
-      setFormData(prev => ({ ...prev, topic: newTopics[0]?.value || "" }))
-    }
-  }, [formData.language])
 
   const generatePrompt = () => {
-    return `Give me ${formData.questions} multiple choice questions about ${formData.topic} in the ${formData.language} programming language/framework. The questions should be at an ${formData.difficulty} level. Return your answer only in the form of a JSON object. The JSON object should have a key named "questions" which is an array of all the questions. Each question should have: "question" (string), "choices" (array of 4 strings), "answer" (number index of correct choice 0-3), and "explanation" (string). Example format: {"questions": [{"question": "What is...", "choices": ["option1", "option2", "option3", "option4"], "answer": 1, "explanation": "Because..."}]}`
+    return `Give me ${formData.questions} multiple choice questions about ${formData.topic} in the ${formData.language} programming language/framework. 
+The questions should be at an ${formData.difficulty} level. 
+Return your answer only in the form of a JSON object. 
+The JSON object should have a key named "questions" which is an array of all the questions. 
+Each question should have: "question" (string), "choices" (array of 4 strings), "answer" (number index of correct choice 0-3), and "explanation" (string). 
+Example format: {"questions": [{"question": "What is...", "choices": ["option1", "option2", "option3", "option4"], "answer": 1, "explanation": "Because..."}]}`
   }
 
   const validateForm = () => {
     const errors: Record<string, string> = {}
-    if (!formData.language) errors.language = "Please select a language."
-    if (!formData.topic) errors.topic = "Please select a topic."
-    if (!formData.difficulty) errors.difficulty = "Please select a difficulty."
-    if (!formData.questions) errors.questions = "Please select number of questions."
+    if (!formData.language.trim()) errors.language = "Please enter a language."
+    if (!formData.topic.trim()) errors.topic = "Please enter a topic."
+    if (!formData.difficulty.trim()) errors.difficulty = "Please enter a difficulty."
+    if (!formData.questions.trim()) errors.questions = "Please enter number of questions."
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }
 
-  const updateFormData = (field: string, value: string) => {
+  const updateFormData = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear error for this field when user starts typing
     if (formErrors[field]) {
       setFormErrors(prev => ({ ...prev, [field]: "" }))
     }
@@ -98,66 +100,78 @@ export function QuizForm({ onQuizDataChange }: QuizFormProps) {
 
   return (
     <div className="w-full">
-      <h2 className="text-sm font-medium text-gray-600 mb-3 uppercase tracking-wide">Quiz Settings</h2>
+      <h2 className="text-sm font-medium text-gray-600 mb-3 uppercase tracking-wide">
+        Quiz Settings
+      </h2>
       
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Language</label>
-          <Combobox
-            options={FORM_OPTIONS.languages}
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+            Language
+          </label>
+          <Input
+            type="text"
+            placeholder="e.g., Python, JavaScript, React, FastAPI..."
             value={formData.language}
-            onValueChange={(value) => updateFormData('language', value)}
-            placeholder="Select or type a language..."
-            searchPlaceholder="Search or type language..."
-            emptyText="Type your custom language"
+            onChange={(e) => updateFormData('language', e.target.value)}
           />
           {formErrors.language && (
-            <p className="text-sm font-medium text-destructive">{formErrors.language}</p>
+            <p className="text-sm font-medium text-destructive">
+              {formErrors.language}
+            </p>
           )}
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Topic</label>
-          <Combobox
-            options={[...availableTopics]}
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+            Topic
+          </label>
+          <Input
+            type="text"
+            placeholder="e.g., Variables & Data Types, Async/Await, Hooks..."
             value={formData.topic}
-            onValueChange={(value) => updateFormData('topic', value)}
-            placeholder="Select or type a topic..."
-            searchPlaceholder="Search or type topic..."
-            emptyText="Type your custom topic"
+            onChange={(e) => updateFormData('topic', e.target.value)}
           />
           {formErrors.topic && (
-            <p className="text-sm font-medium text-destructive">{formErrors.topic}</p>
+            <p className="text-sm font-medium text-destructive">
+              {formErrors.topic}
+            </p>
           )}
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">Difficulty</label>
-          <Combobox
-            options={FORM_OPTIONS.difficulties}
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+            Difficulty
+          </label>
+          <Input
+            type="text"
+            placeholder="e.g., beginner, intermediate, advanced..."
             value={formData.difficulty}
-            onValueChange={(value) => updateFormData('difficulty', value)}
-            placeholder="Select or type difficulty..."
-            searchPlaceholder="Search or type difficulty..."
-            emptyText="Type your custom difficulty"
+            onChange={(e) => updateFormData('difficulty', e.target.value)}
           />
           {formErrors.difficulty && (
-            <p className="text-sm font-medium text-destructive">{formErrors.difficulty}</p>
+            <p className="text-sm font-medium text-destructive">
+              {formErrors.difficulty}
+            </p>
           )}
         </div>
 
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide"># of Questions</label>
-          <Combobox
-            options={FORM_OPTIONS.questionCounts}
+          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+            # of Questions
+          </label>
+          <Input
+            type="number"
+            placeholder="e.g., 5, 10, 15..."
             value={formData.questions}
-            onValueChange={(value) => updateFormData('questions', value)}
-            placeholder="Select or type number of questions..."
-            searchPlaceholder="Search or type number..."
-            emptyText="Type your custom number"
+            onChange={(e) => updateFormData('questions', e.target.value)}
+            min="1"
+            max="50"
           />
           {formErrors.questions && (
-            <p className="text-sm font-medium text-destructive">{formErrors.questions}</p>
+            <p className="text-sm font-medium text-destructive">
+              {formErrors.questions}
+            </p>
           )}
         </div>
 
