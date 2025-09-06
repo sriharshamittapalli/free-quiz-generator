@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
+import { FormFields } from "@/components/form-fields"
 import { QuizData } from "@/types/quiz"
 import { normalizeQuizData } from "@/utils/quiz-normalizer"
 
@@ -20,10 +20,10 @@ type FormData = {
 
 export function QuizForm({ onQuizDataChange }: QuizFormProps) {
   const [formData, setFormData] = useState<FormData>({
-    language: "Python",
-    topic: "Variables & Data Types",
-    difficulty: "intermediate",
-    questions: "5",
+    language: "",
+    topic: "",
+    difficulty: "",
+    questions: "",
   })
   
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -51,9 +51,9 @@ Example format: {"questions": [{"question": "What is...", "choices": ["option1",
   }
 
   const updateFormData = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData(previousState => ({ ...previousState, [field]: value }))
     if (formErrors[field]) {
-      setFormErrors(prev => ({ ...prev, [field]: "" }))
+      setFormErrors(previousState => ({ ...previousState, [field]: "" }))
     }
   }
 
@@ -67,8 +67,8 @@ Example format: {"questions": [{"question": "What is...", "choices": ["option1",
     setTimeout(() => setCopyFeedback(""), 3000)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
     if (!validateForm()) return
     
     const prompt = generatePrompt()
@@ -105,75 +105,11 @@ Example format: {"questions": [{"question": "What is...", "choices": ["option1",
       </h2>
       
       <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-            Language
-          </label>
-          <Input
-            type="text"
-            placeholder="e.g., Python, JavaScript, React, FastAPI..."
-            value={formData.language}
-            onChange={(e) => updateFormData('language', e.target.value)}
-          />
-          {formErrors.language && (
-            <p className="text-sm font-medium text-destructive">
-              {formErrors.language}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-            Topic
-          </label>
-          <Input
-            type="text"
-            placeholder="e.g., Variables & Data Types, Async/Await, Hooks..."
-            value={formData.topic}
-            onChange={(e) => updateFormData('topic', e.target.value)}
-          />
-          {formErrors.topic && (
-            <p className="text-sm font-medium text-destructive">
-              {formErrors.topic}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-            Difficulty
-          </label>
-          <Input
-            type="text"
-            placeholder="e.g., beginner, intermediate, advanced..."
-            value={formData.difficulty}
-            onChange={(e) => updateFormData('difficulty', e.target.value)}
-          />
-          {formErrors.difficulty && (
-            <p className="text-sm font-medium text-destructive">
-              {formErrors.difficulty}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-600 uppercase tracking-wide">
-            # of Questions
-          </label>
-          <Input
-            type="number"
-            placeholder="e.g., 5, 10, 15..."
-            value={formData.questions}
-            onChange={(e) => updateFormData('questions', e.target.value)}
-            min="1"
-            max="50"
-          />
-          {formErrors.questions && (
-            <p className="text-sm font-medium text-destructive">
-              {formErrors.questions}
-            </p>
-          )}
-        </div>
+        <FormFields 
+          formData={formData}
+          formErrors={formErrors}
+          onUpdate={updateFormData}
+        />
 
         <Button type="submit" className="w-full mt-4 bg-green-600 hover:bg-green-700 text-sm">
           Generate Quiz
@@ -191,7 +127,7 @@ Example format: {"questions": [{"question": "What is...", "choices": ["option1",
           <Textarea
             placeholder="Paste the JSON response from Claude here..."
             value={jsonInput}
-            onChange={(e) => setJsonInput(e.target.value)}
+            onChange={(event) => setJsonInput(event.target.value)}
             className="resize-none h-24 w-full text-sm"
           />
           {jsonError && (
